@@ -1,0 +1,12 @@
+diff a/test.txt b/test.txt	(rejected hunks)
+@@ -8,4 +8,7 @@
+ zyc connect.2
+ zyc connect.3
+ zyc connect.4
+-BJT:2014/14/25 17:21
+\ No newline at end of file
++BJT:2014/14/25 17:21
++This is my second editing without branch.
++FFFFFFFFF
++2014/12/26 10:07
+\ No newline at end of file
