@@ -73,12 +73,12 @@ class Domain_Specialcollection extends Domain_Base {
 	 * @throws Exception_Paramerror
 	 */
 	 
-	//public function get_specialcollection_old($need_num, $max_id, $no_cache){
-		public function get_specialcollection_old(){
-		//return Model_Special_Collection::get_old_data($need_num, $max_id, $no_cache);
-		$result['special_collections'] = Model_Special_Collection::old_data(static::GET_SPECIAL_COLLECTION_RECORD_COUNTS);
+	public function get_specialcollection_old($need_num, $max_id, $no_cache){
+		//public function get_specialcollection_old(){
+		return Model_Special_Collection::get_old_data($need_num, $max_id, $no_cache);
+		//$result['special_collections'] = Model_Special_Collection::old_data(static::GET_SPECIAL_COLLECTION_RECORD_COUNTS);
 
-	   return $result;
+	   //return $result;
 	}    	
 
 }

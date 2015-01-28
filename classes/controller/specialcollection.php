@@ -47,20 +47,18 @@ class Controller_Specialcollection extends Controller_Rest_Base{
 	 * 過去特集一覧取得 GET /specialcollection/old
 	 */
 	public function get_old(){
-		/*
+		
 		Validation_Base::init(__METHOD__);
 		$need_num = Validation_Base::get_valid('need_num');
-		//$user_id = null;
-		//$special_collection_id = Validation_Base::get_valid('special_collection_id');
 		$max_id = Validation_Base::get_valid('max_id');
 		$no_cache = Validation_Base::get_valid('no_cache');
-		*/
-		//if(empty($need_num)){
+		
+		if(empty($need_num)){
 
-		//}
+		}
 		
 		$domain = new Domain_Specialcollection($this, $this->get_auth_driver());
 		//$this->response($domain->get_specialcollection_old($need_num, $max_id, $no_cache));
-		$this->response($domain->get_specialcollection_old());
+		$this->response($domain->get_specialcollection_old($need_num, $max_id, $no_cache));
 	}
 }

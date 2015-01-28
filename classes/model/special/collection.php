@@ -72,7 +72,7 @@ class Model_Special_Collection extends Model_Base
 	 * @return array
 	 */
 	public static function get_old_data($need_num, $max_id = null, $no_cache = null){
-		$respons['special_collections'] = self::list_photo_data($need_num, $special_collection_id, $max_id, $no_cache);
+		$respons['special_collections'] = self::old_data($need_num, $max_id, $no_cache);
 		$respons['max_id'] = self::$_max_id;
 		$respons['current_count'] = count($respons['special_collections']);
 
@@ -601,28 +601,73 @@ class Model_Special_Collection extends Model_Base
 	 *
 	 * @return array
 	 */
-	public static function old_data($need_num, $max_id = null, $user_id=null, $no_cache=null){
-
+	public static function old_data($need_num, $max_id = null, $no_cache=null){
+		$issp = self::is_mobile_request();
+		if($issp == true){
+		//SP
 		// カレントページのデータ取得
-		$query = DB::select('dr.*');
-		$query->from(array(static::table(),'dr'));
-		$query->where(array('dr.delete_at'=>NULL));
-		$query->where(array('dr.banner_display_flg'=>1));
-		$query->where('dr.end_date','<=',DB::expr('NOW()'));
-		//$query->where(array('dr.type'=>3));
-		//$query->where('dr.id','<',$max_id);
-
-		$query->limit($need_num);
-		$query->order_by('dr.id','desc');
-		$query->as_object('Model_Special_Collection');
-
-		if($no_cache == 1){
-			$results = $query->execute();
-		}else{
-			$cache_key = "db." .self::$_table_name .".n{$need_num}_m{$max_id}_u{$user_id}";
-			$results = $query->cached(Config::get('query_expires_cache_time'), $cache_key, false)->execute(); //キャッシュを利用
+			$query = DB::select('dr.*');
+			$query->from(array(static::table(),'dr'));
+			$query->where(array('dr.delete_at'=>NULL));
+			$query->where(array('dr.banner_display_flg'=>1));
+			$query->where('dr.end_date','<=',DB::expr('NOW()'));
+			$query->where(array('dr.type'=>3));
+			$query->where('dr.id','<',$max_id);
+	
+			$query->limit($need_num);
+			$query->order_by('dr.id','desc');
+			$query->as_object('Model_Special_Collection');
+	
+			if($no_cache == 1){
+				$results = $query->execute();
+			}else{
+				$cache_key = "db." .self::$_table_name .".n{$need_num}_m{$max_id}_u{$user_id}";
+				$results = $query->cached(Config::get('query_expires_cache_time'), $cache_key, false)->execute(); //キャッシュを利用
+			}
+	
+			$respons = array();
+	
+			if(count($results) == 0){
+				return $respons;
+			}
+	
+			foreach ($results as $result){
+				$format_data = $result->format_response_ks();
+				self::$_max_id = $format_data['special_collection_id'];
+				$respons[] = $format_data;
+			}
+	
+			return  $respons;
 		}
-
+		else{
+			/*
+		//PC SOS重点开始了
+		//omophotosテーブル
+		$sql = "select o.id, o.image_file_name from special_collection as sc".
+				" inner join special_collection_linked as scl on sc.id = scl.special_collection_id".
+				" inner join omophotos as o on scl.linked_photo_id = o.id".
+				" inner join omophoto_ranking_totals as rnk on o.id = rnk.omophoto_id".
+				" where scl.linked_type = ".static::LINKED_TYPE_1.
+				" and scl.delete_at is null and sc.delete_at is null".
+				" and sc.banner_display_flg = ".static::BANNER_DISPLAY_flg.
+				" and (sc.start_date <= now() and sc.end_date >= now())".
+				" and sc.id = ".$special_collection_id.//
+				" and rnk.target_at = "."SELECT max(target_at) FROM omophoto_ranking_totals".
+				" and o.delete_flg = ".static::DELETE_FLG;
+				" and rnk.delete_flg = ".static::DELETE_FLG;
+		if(isset($max_id) && !empty($max_id) && ctype_digit((string)$max_id)){
+			$sql .=	" and p.id < ".$max_id;		
+		}
+		$sql .=	 " order by p.id desc limit ".$need_num.";";
+		Log::info($sql);
+		if($no_cache == 1){
+			$results = DB::query($sql)->execute();	
+		}else{
+			//$cache_key = "db." .self::$_table_name .".n{$need_num}_m{$max_id}_u{$user_id}_p{$photo_id}_o{$official_flg}";
+			$cache_key = "";
+			$results = DB::query($sql)->cached(Config::get('query_expires_cache_time'), $cache_key, false)->execute(); //キャッシュを利用
+		}		
+		
 		$respons = array();
 
 		if(count($results) == 0){
@@ -630,12 +675,53 @@ class Model_Special_Collection extends Model_Base
 		}
 
 		foreach ($results as $result){
-			$format_data = $result->format_response();
-			self::$_max_id = $format_data['special_collection_id'];
+			$format_data = array('id' => $result['id'],
+							'user_id' => $result['user_id'],
+							'image_file_name' => $result['image_file_name'],
+							'image_file_size' => $result['image_file_size'],
+							'created_at' =>$result['created_at']);
+			self::$_max_id = $format_data['id'];
 			$respons[] = $format_data;
 		}
-
+		
 		return  $respons;
+		//到这里都是重点
+		*/
+		// カレントページのデータ取得
+			$query = DB::select('dr.*');
+			$query->from(array(static::table(),'dr'));
+			//$query->from(array('special_collection','dr'));
+			$query->where(array('dr.delete_at'=>NULL));
+			$query->where(array('dr.banner_display_flg'=>1));
+			$query->where('dr.end_date','<=',DB::expr('NOW()'));
+			$query->where(array('dr.type'=>3));
+			$query->where('dr.id','<',$max_id);
+	
+			$query->limit($need_num);
+			$query->order_by('dr.id','desc');
+			$query->as_object('Model_Special_Collection');
+	
+			if($no_cache == 1){
+				$results = $query->execute();
+			}else{
+				$cache_key = "db." .self::$_table_name .".n{$need_num}_m{$max_id}_u{$user_id}";
+				$results = $query->cached(Config::get('query_expires_cache_time'), $cache_key, false)->execute(); //キャッシュを利用
+			}
+	
+			$respons = array();
+	
+			if(count($results) == 0){
+				return $respons;
+			}
+	
+			foreach ($results as $result){
+				$format_data = $result->format_response_ks();
+				self::$_max_id = $format_data['special_collection_id'];
+				$respons[] = $format_data;
+			}
+	
+			return  $respons;
+			}
 	}
 	
 	/**
@@ -689,23 +775,38 @@ class Model_Special_Collection extends Model_Base
 	}
 	
 	 /**
-	 * PC戻り値
+	 * 過去特集一覧取得の戻り値
 	 *
 	 * @param array $data
 	 * @return array
 	 */
-	public function format_response_pc(array $data = array()){
+	public function format_response_ks(array $data = array()){
 
 		$excutor_user_id = self::get_executor_user_id();
-
-		return parent::format_response(array(
+		$issp = self::is_mobile_request();
+		if($issp == true){
+			return parent::format_response(array(
+			'special_collection_id' => $this->id,
+			//'image_url' => Util_Url::get_photoimage_url($this->id,$this->image_file_name),
+			'banner_img' => $this->sp_banner_img,
+			'banner_link' => $this->sp_banner_link,
+			'name' => $this->name,
+			'introduction' => $this->introduction,
+			'omophoto_list' => NULL,
+			));
+			}
+			else{
+			return parent::format_response(array(
 			'special_collection_id' => $this->id,
 			//'image_url' => Util_Url::get_photoimage_url($this->id,$this->image_file_name),
 			'banner_img' => $this->pc_banner_img,
 			'banner_link' => $this->pc_banner_link,
-			'type' => $this->type,
-			//'user' => Model_User::get_format_user_data($this->user_id),
+			'name' => $this->name,
+			'introduction' => $this->introduction,
+			'omophoto_list' => NULL,
 		));
+				}
+		
 	}
 
 	 /**
