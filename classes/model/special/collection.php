@@ -19,6 +19,8 @@ class Model_Special_Collection extends Model_Base
 	const IMAGE_DELETE_STATUS_WAIT = 1; // 画像削除待ち
 	const IMAGE_DELETE_STATUS_COMPLETE = 2; // 画像削除完了
 	const IMAGE_DELETE_STATUS_FAIL = 3; // 画像削除失敗
+	
+	//global $gid;
 
 	protected static $_max_id = NULL;
 	
@@ -602,6 +604,7 @@ class Model_Special_Collection extends Model_Base
 	 * @return array
 	 */
 	public static function old_data($need_num, $max_id = null, $no_cache=null){
+		//global $gid;
 		$issp = self::is_mobile_request();
 		if($issp == true){
 		//SP
@@ -640,9 +643,26 @@ class Model_Special_Collection extends Model_Base
 			return  $respons;
 		}
 		else{
-			/*
+			
 		//PC SOS重点开始了
 		//omophotosテーブル
+		/*11
+		$sql1 = "select max(target_at) from omophoto_ranking_totals";
+				Log::info($sql1);
+				
+				if($no_cache == 1){
+					$results1 = DB::query($sql1)->execute();	
+				}else{
+					//$cache_key = "db." .self::$_table_name .".n{$need_num}_m{$max_id}_u{$user_id}_p{$photo_id}_o{$official_flg}";
+					$cache_key = "";
+					$results1 = DB::query($sql1)->cached(Config::get('query_expires_cache_time'), $cache_key, false)->execute(); //キャッシュを利用
+				}	
+				$results1 = DB::query($sql1)->execute();
+		11*/
+		
+		//3目のSQL文を始まります
+		//				" and sc.id = ".$gid.
+
 		$sql = "select o.id, o.image_file_name from special_collection as sc".
 				" inner join special_collection_linked as scl on sc.id = scl.special_collection_id".
 				" inner join omophotos as o on scl.linked_photo_id = o.id".
@@ -650,15 +670,15 @@ class Model_Special_Collection extends Model_Base
 				" where scl.linked_type = ".static::LINKED_TYPE_1.
 				" and scl.delete_at is null and sc.delete_at is null".
 				" and sc.banner_display_flg = ".static::BANNER_DISPLAY_flg.
-				" and (sc.start_date <= now() and sc.end_date >= now())".
-				" and sc.id = ".$special_collection_id.//
-				" and rnk.target_at = "."SELECT max(target_at) FROM omophoto_ranking_totals".
+
+
+				" and rnk.target_at = "."(select max(target_at) from omophoto_ranking_totals)".
 				" and o.delete_flg = ".static::DELETE_FLG;
 				" and rnk.delete_flg = ".static::DELETE_FLG;
-		if(isset($max_id) && !empty($max_id) && ctype_digit((string)$max_id)){
-			$sql .=	" and p.id < ".$max_id;		
-		}
-		$sql .=	 " order by p.id desc limit ".$need_num.";";
+				" group by rnk.ranking_id ".
+				" order by rnk.ranking_id asc ".
+				" LIMIT 3";
+
 		Log::info($sql);
 		if($no_cache == 1){
 			$results = DB::query($sql)->execute();	
@@ -676,18 +696,59 @@ class Model_Special_Collection extends Model_Base
 
 		foreach ($results as $result){
 			$format_data = array('id' => $result['id'],
-							'user_id' => $result['user_id'],
-							'image_file_name' => $result['image_file_name'],
-							'image_file_size' => $result['image_file_size'],
-							'created_at' =>$result['created_at']);
+							'image_file_name' => $result['image_file_name'],);
+
 			self::$_max_id = $format_data['id'];
 			$respons[] = $format_data;
 		}
+		////3目のSQL文を終わり
 		
-		return  $respons;
+
+				$sql2 = "select sc.id, sc.pc_banner_img, sc.pc_banner_link, sc.name, sc.introduction from special_collection as sc".
+				" where sc.delete_at is null".
+				" and sc.banner_display_flg = ".static::BANNER_DISPLAY_flg.
+				" and sc.end_date <= now()".
+				" and sc.type = 3";
+				if(isset($max_id) && !empty($max_id) && ctype_digit((string)$max_id)){
+					$sql2 .=	" and sc.id < ".$max_id;		
+				}
+				$sql2 .=	 " order by sc.id desc limit ".$need_num.";";
+				Log::info($sql2);
+				if($no_cache == 1){
+					$results2 = DB::query($sql2)->execute();
+				}else{
+					//$cache_key = "db." .self::$_table_name .".n{$need_num}_m{$max_id}_u{$user_id}_p{$photo_id}_o{$official_flg}";
+					$cache_key = "";
+					$results2 = DB::query($sql2)->cached(Config::get('query_expires_cache_time'), $cache_key, false)->execute(); //キャッシュを利用
+				}	
+						
+		$respons2 = array();
+
+		if(count($results2) == 0){
+			return $respons2;
+		}
+
+		foreach ($results2 as $result){
+			$format_data = array('id' => $result['id'],
+							'banner_img' => $result['pc_banner_img'],
+							'banner_link' => $result['pc_banner_link'],
+							'name' => $result['name'],
+							'introduction' =>$result['introduction'],
+							'omophoto_list' =>$respons);
+
+			self::$_max_id = $format_data['id'];
+			$respons2[] = $format_data;
+		}
+		//$grespons2 = $respons2['id'];
+
+		
+
+		
+		return  $respons2;
 		//到这里都是重点
-		*/
+		
 		// カレントページのデータ取得
+		/*
 			$query = DB::select('dr.*');
 			$query->from(array(static::table(),'dr'));
 			//$query->from(array('special_collection','dr'));
@@ -721,6 +782,7 @@ class Model_Special_Collection extends Model_Base
 			}
 	
 			return  $respons;
+			PC部分，框架结构*/
 			}
 	}
 	
