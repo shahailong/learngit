@@ -41,5 +41,20 @@ class Domain_Top extends Domain_Base{
 
 	   return $result;
 	}
+	
+	/**
+	 * PCのトップ画面で使うリストを取得します。
+	 *
+	 * @return string
+	 * @throws Exception_Paramerror
+	 */
+	public function get_top_listp(){
+		$result['omophotos'] = Model_Omophoto::list_data(static::GET_OMOPHOTO_RECORD_COUNTS);
+		$result['omophoto_rankings'] = Model_Omophoto_Ranking_Term::list_data(static::GET_OMOPHOTO_RANKING_RECORD_COUNTS,Model_Omophoto_Ranking_Term::TYPE_DAILY_RANKING);
+		$result['photos'] = Model_Photo::list_data(static::GET_PHOTO_RECORD_COUNTS);
+		$result['special_collections'] = Model_Special_Collection::list_datap(static::GET_SPECIAL_COLLECTION_RECORD_COUNTS);
+
+	   return $result;
+	}
 
 }

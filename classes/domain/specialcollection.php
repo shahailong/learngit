@@ -79,6 +79,21 @@ class Domain_Specialcollection extends Domain_Base {
 		//$result['special_collections'] = Model_Special_Collection::old_data(static::GET_SPECIAL_COLLECTION_RECORD_COUNTS);
 
 	   //return $result;
-	}    	
+	} 
+	
+	/**
+	 * PC過去特集一覧取得
+	 * author : shahailong
+	 * BJT :2014/01/07
+	 *
+	 * @return string
+	 * @throws Exception_Paramerror
+	 */
+	 
+	public function get_specialcollection_oldp($need_num, $max_id, $no_cache){
+
+		return Model_Special_Collection::get_old_datap($need_num, $max_id, $no_cache);
+
+	}   	
 
 }
