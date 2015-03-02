@@ -73,6 +73,10 @@ class Domain_Omophoto extends Domain_Base{
 
 		);
 		$Notification_record->save();
+		
+		//SATRT
+		$original_special_collection_linked_data = Model_Special_Collection_Linked::get_by_idnew($photo_id);
+		//END
 
 		$record_directory_key = Config::get('s3_public_omophoto_directory_name') ."/" .$omophoto_record->id ."/" .$omophoto_record->image_file_name;
 		// S3に転送
